@@ -1,4 +1,9 @@
 # torchat
+
+## Pre requisites
+
+
+
 # Part 1
 ## How to convert wif to Onion Address
 ## Download TOR Key Converter
@@ -95,6 +100,42 @@ python chat_app.py listen --port 8765 --video --audio
 
 You will see a screen like this inside the terminal
 ![chat_app connecting screenshot](chat_app_connecting_screenshot.png)
+
+## You are now waiting another peer to join your TOR chat connection
+
+## Step 4
+## Copy your hostname or Onion address
+Go to C:\TorHiddenService
+Open the file "hostname" with any note editor
+
+## Your onion address is something like this with a .onion extension
+xyikvsf3e55rqwdbhycxjurop6fmj7cs9du7jcb5khk67dxfy2tapuqid.onion
+
+## Copy the onion address
+## Send it to the peson or peer who wants to connect to your TOR chat network
+
+## Step 5 (Very Important)
+## Your peer will need to start TOR using the same command
+
+CMD
+cd "C:\Program Files\Tor Browser\Browser\TorBrowser\Tor"
+
+Run
+tor.exe -f torrc
+
+## Step 6
+## Once the TOR is connected (Bootstrapped 100% (done)
+The peer will need to run this command to connect to your TOR chat network
+
+python chat_app_av.py connect --onion <Your Onion Address .onion> --port 80 --video --audio
+
+## TOR Chat is now connected
+### Both you and the peer will see the chat window in the opened terminal.
+### Your webcam will open
+### A text based chat can be used inside the terminal running the chat_app_av.py command
+
+## Note:
+## In any case, the TOR must be always running to connect to the chat app 
 
 
 
