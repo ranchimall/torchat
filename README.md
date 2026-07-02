@@ -1,8 +1,113 @@
 # torchat
 
 ## Pre requisites
+### 1. Python 3.8+
 
+### 2. Tor (the actual Tor daemon — not a Python package)
+This app talks to a Tor SOCKS proxy running on your machine (127.0.0.1:9050 by default). You need Tor itself installed and running locally, on both sides of the chat.
 
+### 3. Hidden service setup (host / listen side only) 
+Only the person running in listen mode needs this — the person who connects does not.
+### This is explained step by step in Part 2: Step 4 of this guide
+
+### 4. Python packages
+   ### connect mode (dialing out via Tor SOCKS):
+   pip install PySocks --break-system-packages
+   ### video
+   pip install opencv-python numpy --break-system-packages
+   ### audio
+   pip install sounddevice numpy opuslib --break-system-packages
+
+   ### To install everything at once:
+   pip install PySocks opencv-python numpy sounddevice opuslib --break-system-packages
+
+### 5. libopus (system library, for --audio only)
+   macOS
+   brew install opus
+   
+   Linux (Debian/Ubuntu)
+   sudo apt install libopus0
+   
+   Windows
+   Requires an opus.dll available on your system PATH (or placed next to your Python executable).
+
+### Opus Widnows Setup
+
+Audio calls require the native Opus library in addition to the Python package.
+
+### 1. Install Python package
+
+```bash
+pip install opuslib
+```
+
+### 2. Install Opus DLL using MSYS2
+
+Install MSYS2 from:
+
+https://www.msys2.org/
+
+Open the **MSYS2 MINGW64** terminal and run:
+
+```bash
+pacman -S mingw-w64-x86_64-opus
+```
+
+This installs:
+
+```
+C:\msys64\mingw64\bin\libopus-0.dll
+```
+
+### 3. Configure the application
+
+If the application cannot automatically locate the Opus library, edit:
+
+```
+Python\Lib\site-packages\opuslib\api\__init__.py
+```
+
+Replace:
+
+```python
+lib_location = find_library("opus")
+
+if lib_location is None:
+    raise Exception(
+        "Could not find Opus library. Make sure it is installed.")
+
+libopus = ctypes.CDLL(lib_location)
+```
+
+with:
+
+```python
+lib_location = find_library("opus")
+
+# Windows fallback
+if lib_location is None:
+    lib_location = r"C:\msys64\mingw64\bin\libopus-0.dll"
+
+libopus = ctypes.CDLL(lib_location)
+```
+
+### 4. Verify
+
+Run:
+
+```bash
+python -c "import opuslib; print('Opus loaded successfully')"
+```
+
+If you see:
+
+```
+Opus loaded successfully
+```
+
+then the audio dependency has been installed correctly.  
+
+# TOR Chat Setup
 
 # Part 1
 ## How to convert wif to Onion Address
