@@ -77,5 +77,26 @@ hs_ed25519_secret_key
 ## Download the standalone python code for the chat app
 [📥 Download chat_app_av.py](https://github.com/ranchimall/torchat/blob/main/chat_app_av.py)
 
+## Step 2
+## Copy the python code in a path of your choice.
+Example: C:\Users\<Your User>\Documents\TOR Chat\chat_app_av.py
+
+## Step 3
+## Run the python script
+Open CMD.
+
+Go to the Chat App folder.
+
+Example:
+C:\Users\<Your User>\Documents\TOR Chat
+
+Run
+python chat_app.py listen --port 8765 --video --audio
+
+You will see a screen like this inside the terminal
+![chat_app connecting screenshot](chat_app_connecting_screenshot.png)
+
+
+
 
 
