@@ -5,7 +5,7 @@
 
 [📥 Download tor-key-converter.html](https://github.com/ranchimall/torchat/blob/main/tor-key-converter.html)
 
-Enter your wif and it will download three files:
+Enter your FLO or BTC blockchain wif, Click button: "Convert WIF → Tor Keys", and it will download three files:
 1. hostname
 2. hs_ed25519_public_key
 3. hs_ed25519_secret_key
