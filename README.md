@@ -74,7 +74,7 @@ hs_ed25519_secret_key
 ## How to run the audio video chat app on TOR
 
 ## Step 1
-Download the standalone python code for the chat app
+## Download the standalone python code for the chat app
 [📥 Download chat_app_av.py](https://github.com/ranchimall/torchat/blob/main/chat_app_av.py)
 
 
