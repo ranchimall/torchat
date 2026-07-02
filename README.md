@@ -31,3 +31,4 @@ In the same directory as tor.exe, create a file called:
 torrc
 
 The extension of the file will be nothing, only torcc
+![torcc file Screenshot](torcc screenshot.png)
