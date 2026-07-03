@@ -1,4 +1,4 @@
-# torchat
+# TOR Video + Audio + Chat
 
 ## Pre requisites
 ### 1. Python 3.8+
