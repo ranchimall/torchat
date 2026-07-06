@@ -1,0 +1,5 @@
+PySocks
+opencv-python
+numpy
+sounddevice
+opuslib

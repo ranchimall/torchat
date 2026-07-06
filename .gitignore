@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# App specific
+opus.dll
+tor_bin/
+hidden_service/
+torrc
+*.log

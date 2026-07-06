@@ -177,6 +177,17 @@ def send_loop(sock, sock_lock, stop_event):
             break
         if text.strip() == "/quit":
             break
+        if text.strip().startswith("/vol "):
+            try:
+                global VOL_MULTIPLIER
+                VOL_MULTIPLIER = int(text.strip().split()[1])
+                with PRINT_LOCK:
+                    print(f"[*] Volume multiplier updated to {VOL_MULTIPLIER}x")
+            except Exception:
+                with PRINT_LOCK:
+                    print("[!] Usage: /vol <number> (e.g. /vol 6)")
+            continue
+            
         try:
             send_framed(sock, sock_lock, MSG_TEXT, text.encode())
         except OSError:
@@ -355,6 +366,9 @@ def video_display_loop(video_queue, stop_event):
         img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         if img is None:
             continue
+        
+        # WINDOW_NORMAL allows the user to freely resize the window by dragging the corners
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.imshow(window_name, img)
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
@@ -368,21 +382,56 @@ def video_display_loop(video_queue, stop_event):
 # --------------------------------------------------------------------------
 
 _OPUS_VALID_FRAME_MS = (2.5, 5, 10, 20, 40, 60)
-
+_OPUS_LOCK = threading.Lock()
+VOL_MULTIPLIER = 4
 
 def _require_opus(sample_rate, chunk_ms):
     """Import opuslib and validate that (sample_rate, chunk_ms) form a
     legal Opus frame. Exits loudly on failure rather than falling back to
     raw PCM, since a silent per-side fallback would mean one peer sends
     Opus and the other expects raw PCM -- garbled audio with no clear error."""
-    try:
-        import opuslib
-    except ImportError:
-        print("[!] opuslib is required for --audio. Install with:")
-        print("    pip install opuslib --break-system-packages")
-        print("    (also requires the system 'libopus' library, e.g.")
-        print("     'apt install libopus0' or 'brew install opus')")
-        return None
+    with _OPUS_LOCK:
+        try:
+            import os
+            # Python 3.8+ requires explicit DLL directory whitelisting
+            if hasattr(os, 'add_dll_directory'):
+                os.add_dll_directory(os.path.abspath(os.path.dirname(__file__)))
+            # opuslib uses ctypes.util.find_library which searches the PATH
+            os.environ['PATH'] = os.path.abspath(os.path.dirname(__file__)) + os.pathsep + os.environ.get('PATH', '')
+            
+            import opuslib
+            return _validate_opus(opuslib, sample_rate, chunk_ms)
+        except Exception as e:
+            import sys
+            import os
+            if "Could not find Opus library" in str(e) and os.name == 'nt':
+                print("[+] Windows missing opus.dll detected. Downloading it automatically...")
+                try:
+                    import urllib.request
+                    urllib.request.urlretrieve("https://raw.githubusercontent.com/Rapptz/discord.py/v1.7.3/discord/bin/libopus-0.x64.dll", "opus.dll")
+                    print("[+] Download complete! Loading audio engine...")
+                    # Clear the failed import cache so we can try again
+                    for key in list(sys.modules.keys()):
+                        if key.startswith('opuslib'):
+                            del sys.modules[key]
+                            
+                    # Ensure PATH is set before re-importing
+                    import os
+                    os.environ['PATH'] = os.path.abspath(os.path.dirname(__file__)) + os.pathsep + os.environ.get('PATH', '')
+                    
+                    import opuslib
+                    return _validate_opus(opuslib, sample_rate, chunk_ms)
+                except Exception as e2:
+                    print(f"[!] Failed to auto-download opus.dll: {e2}")
+                    return None
+            else:
+                print("[!] opuslib is required for --audio. Install with:")
+                print("    pip install opuslib --break-system-packages")
+                print("    (also requires the system 'libopus' library, e.g.")
+                print("     'apt install libopus0' or 'brew install opus')")
+                return None
+
+def _validate_opus(opuslib, sample_rate, chunk_ms):
     if chunk_ms not in _OPUS_VALID_FRAME_MS:
         print(f"[!] --audio-chunk-ms must be one of {_OPUS_VALID_FRAME_MS} for Opus, got {chunk_ms}")
         return None
@@ -428,6 +477,14 @@ def audio_capture_loop(sock, sock_lock, stop_event, sample_rate, chunk_ms, input
                 data, _overflowed = stream.read(frames_per_chunk)
             except Exception:
                 break
+            
+            # Boost the microphone volume dynamically
+            import numpy as np
+            global VOL_MULTIPLIER
+            data_32 = data.astype(np.int32) * VOL_MULTIPLIER
+            data_32 = np.clip(data_32, -32768, 32767)
+            data = data_32.astype(np.int16)
+
             try:
                 encoded = encoder.encode(data.tobytes(), frames_per_chunk)
             except Exception:
@@ -477,6 +534,13 @@ def audio_playback_loop(audio_queue, stop_event, sample_rate, output_device, chu
             except Exception:
                 continue
             arr = np.frombuffer(pcm, dtype=np.int16)
+            
+            # Boost incoming audio volume dynamically
+            global VOL_MULTIPLIER
+            arr_32 = arr.astype(np.int32) * VOL_MULTIPLIER
+            arr_32 = np.clip(arr_32, -32768, 32767)
+            arr = arr_32.astype(np.int16)
+
             try:
                 stream.write(arr)
             except Exception:

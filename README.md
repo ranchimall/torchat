@@ -1,74 +1,61 @@
 # TOR Video + Audio + Chat
 
-## Pre requisites
-### 1. Python 3.8+
+A fully decentralized, peer-to-peer encrypted video and audio chat application that routes all traffic over the Tor network. 
 
-### 2. Tor (the actual Tor daemon — not a Python package)
-This app talks to a Tor SOCKS proxy running on your machine (127.0.0.1:9050 by default). You need Tor itself installed and running locally, on both sides of the chat.
+## Prerequisites
+1. **Python 3.8+**
+2. **Tor** (the actual Tor daemon)
+3. **Python packages** (see below)
 
-### 3. Hidden service setup (host / listen side only) 
-Only the person running in listen mode needs this — the person who connects does not.
-### This is explained step by step in Part 2: Step 4 of this guide
+### Python Packages
+It is highly recommended to install the dependencies inside a Python virtual environment to avoid conflicting with your system packages.
 
-### 4. Python packages
-   ### connect mode (dialing out via Tor SOCKS):
-   pip install PySocks --break-system-packages
-   ### video
-   pip install opencv-python numpy --break-system-packages
-   ### audio
-   pip install sounddevice numpy opuslib --break-system-packages
+1. **Create the virtual environment:**
+   ```bash
+   python -m venv venv
+   ```
 
-   ### To install everything at once:
-   pip install PySocks opencv-python numpy sounddevice opuslib --break-system-packages
+2. **Activate the virtual environment:**
+   * **Windows:** `.\venv\Scripts\activate`
+   * **Mac/Linux:** `source venv/bin/activate`
 
-### 5. libopus (system library, for --audio only)
-   macOS
-   brew install opus
-   
-   Linux (Debian/Ubuntu)
-   sudo apt install libopus0
-   
-   Windows
-   Requires an opus.dll available on your system PATH (or placed next to your Python executable).
+3. **Install the requirements:**
+   Once your terminal shows `(venv)` at the prompt, run:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Opus Widnows Setup
+### System Libraries
+* **Windows:** The Opus DLL gets automatically set up if you run the automated script. Otherwise, you must use the manual setup below.
+* **macOS:** `brew install opus`
+* **Linux (Debian/Ubuntu):** `sudo apt install libopus0`
 
-Audio calls require the native Opus library in addition to the Python package.
+#### Alternative: Manual Opus Windows Setup
+If you prefer to install the Opus DLL manually rather than using the auto-downloader, you can do so using MSYS2.
 
-### 1. Install Python package
-
-```bash
-pip install opuslib
-```
-
-### 2. Install Opus DLL using MSYS2
+**1. Install Opus DLL using MSYS2**
 
 Install MSYS2 from:
-
-https://www.msys2.org/
+[https://www.msys2.org/](https://www.msys2.org/)
 
 Open the **MSYS2 MINGW64** terminal and run:
-
 ```bash
 pacman -S mingw-w64-x86_64-opus
 ```
 
 This installs:
-
 ```
 C:\msys64\mingw64\bin\libopus-0.dll
 ```
 
-### 3. Configure the application
+**2. Configure the application**
 
 If the application cannot automatically locate the Opus library, edit:
-
 ```
 Python\Lib\site-packages\opuslib\api\__init__.py
 ```
 
 Replace:
-
 ```python
 lib_location = find_library("opus")
 
@@ -80,7 +67,6 @@ libopus = ctypes.CDLL(lib_location)
 ```
 
 with:
-
 ```python
 lib_location = find_library("opus")
 
@@ -91,77 +77,82 @@ if lib_location is None:
 libopus = ctypes.CDLL(lib_location)
 ```
 
-### 4. Verify
+**3. Verify**
 
 Run:
-
 ```bash
 python -c "import opuslib; print('Opus loaded successfully')"
 ```
 
 If you see:
-
 ```
 Opus loaded successfully
 ```
+then the audio dependency has been installed correctly.
 
-then the audio dependency has been installed correctly.  
+---
 
-# TOR Chat Setup
+# Setup Guide
 
-# Part 1
-## How to convert wif to Onion Address
-## Download TOR Key Converter
+## Part 1: Automated Tor Setup (Keys & Hidden Service)
+Setting up a Tor hidden service manually can be tedious. We have built a web-based **Tor Keys Generator** that automatically converts your private key (WIF) into valid Tor Hidden Service Keys and generates automated setup scripts.
 
-[📥 Download tor-key-converter.html](https://github.com/ranchimall/torchat/blob/main/tor-key-converter.html)
+**Live Link:** [https://ranchimall.github.io/PrivateKeyToTOR/](https://ranchimall.github.io/PrivateKeyToTOR/)
 
-## Open the html in a browser:
-Enter your FLO or BTC blockchain wif, Click button: "Convert WIF → Tor Keys", and it will download three files:
-1. hostname
-2. hs_ed25519_public_key
-3. hs_ed25519_secret_key
+### Steps:
+1. Open the live link above in your browser.
+2. Enter your FLO or BTC blockchain WIF (or click "Generate New Keys" if you don't have one).
+3. Click the button to convert your WIF to Tor Keys.
+4. Scroll down to the ** Automated Setup Scripts** section.
+5. Click on **Windows**, **Mac OS**, or **Linux** to download your customized setup script (`.bat` or `.sh`).
+6. Run the downloaded script on your computer. It will automatically:
+   * Install the Tor background daemon.
+   * Create your `torrc` file with the correct Hidden Service mapping.
+   * Place your newly generated Tor Keys into the correct folders automatically.
+   * Print out your final `.onion` address.
 
-# Part 2
-## How to setup TOR from the generated secret key
-## Step 1: Download TOR browser
+## Part 2: How to setup TOR from the downloaded secret key
+### Step 1: Download TOR browser
 [📥 Download TOR browser](https://www.torproject.org/download/)
 
-## Step 2. Find tor.exe
+### Step 2. Find tor.exe
 It is usually located at:
 C:\Users\<YourUser>\Desktop\Tor Browser\Browser\TorBrowser\Tor\tor.exe
 or
 C:\Program Files\Tor Browser\Browser\TorBrowser\Tor\tor.exe
 
-## Verify that you have:
+### Verify that you have:
 tor.exe
 and
 torrc-defaults
 
-## Step 3. Create a torrc file
+### Step 3. Create a torrc file
 In the same directory as tor.exe, create a file called:
 torrc
 
 The extension of the file will be nothing, only torcc
 ![torcc file Screenshot](torcc_screenshot.png)
 
-## Enter these values inside the new torcc file
+### Enter these values inside the new torcc file
 HiddenServiceDir C:\TorHiddenService
 HiddenServicePort 80 127.0.0.1:8765
 HiddenServiceVersion 3
 SocksPort 9050
 
-## Save it
+### Save it
 
-## Step 4. Create the directory TorHiddenService
+### Step 4. Create the directory TorHiddenService
 
 Create a folder
 C:\TorHiddenService
 
-## Very important
-Copy your generated secret key from Part 1 inside TorHiddenService
+## Very important (Downloading your Keys)
+Go to the **Manual Configuration** section on the [Tor Keys Generator](https://ranchimall.github.io/PrivateKeyToTOR/) website and click the **"Download Backup Keys"** button. 
+
+Extract the downloaded files and copy your `hs_ed25519_secret_key` into the TorHiddenService folder you just created:
 C:\TorHiddenService\hs_ed25519_secret_key
 
-## Step 5. Start Tor
+### Step 5. Start Tor
 Open CMD.
 
 Go to the Tor folder.
@@ -175,74 +166,41 @@ tor.exe -f torrc
 You'll see something similar to
 Bootstrapped 100% (done)
 
-## This will update your C:\TorHiddenService with
+### This will update your C:\TorHiddenService with
 hostname
 hs_ed25519_public_key
 hs_ed25519_secret_key
 
-# Part 3
-## How to run the audio video chat app on TOR
+---
 
-## Step 1
-## Download the standalone python code for the chat app
-[📥 Download chat_app_av.py](https://github.com/ranchimall/torchat/blob/main/chat_app_av.py)
+# Part 3: How to run the Audio/Video Chat
 
-## Step 2
-## Copy the python code in a path of your choice.
-Example: C:\Users\<Your User>\Documents\TOR Chat\chat_app_av.py
+### Step 1: Start Tor
+Ensure your Tor background service is running. If you used the automated setup script from Part 1, it will start Tor for you automatically.
 
-## Step 3
-## Run the python script
-Open CMD.
+### Step 2: The Host (Listener)
+If you are hosting the chat, you need to run the script in `listen` mode. 
 
-Go to the Chat App folder.
+Open your terminal in the directory containing `chat_app_av.py` and run:
+```bash
+python chat_app_av.py listen --port 8765 --video --audio
+```
+*You will see a waiting screen. Your webcam will initialize.*
 
-Example:
-C:\Users\<Your User>\Documents\TOR Chat
+### Step 3: Share your Onion Address
+Give the `.onion` address (generated in Part 1) to your friend. 
 
-Run
-python chat_app.py listen --port 8765 --video --audio
+### Step 4: The Peer (Connector)
+Your friend will use your `.onion` address to connect to you. They must also have Tor running in the background.
 
-You will see a screen like this inside the terminal
-![chat_app connecting screenshot](chat_app_connecting_screenshot.png)
+They run:
+```bash
+python chat_app_av.py connect --onion YOUR_ONION_ADDRESS.onion --port 80 --video --audio
+```
+*(Replace `YOUR_ONION_ADDRESS.onion` with the actual address).*
 
-## You are now waiting another peer to join your TOR chat connection
-
-## Step 4
-## Copy your hostname or Onion address
-Go to C:\TorHiddenService
-Open the file "hostname" with any note editor
-
-## Your onion address is something like this with a .onion extension
-xyikvsf3e55rqwdbhycxjurop6fmj7cs9du7jcb5khk67dxfy2tapuqid.onion
-
-## Copy the onion address
-## Send it to the peson or peer who wants to connect to your TOR chat network
-
-## Step 5 (Very Important)
-## Your peer will need to start TOR using the same command
-
-CMD
-cd "C:\Program Files\Tor Browser\Browser\TorBrowser\Tor"
-
-Run
-tor.exe -f torrc
-
-## Step 6
-## Once the TOR is connected (Bootstrapped 100% (done)
-The peer will need to run this command to connect to your TOR chat network
-
-python chat_app_av.py connect --onion <Your Onion Address .onion> --port 80 --video --audio
-
-## TOR Chat is now connected
-### Both you and the peer will see the chat window in the opened terminal.
-### Your webcam will open
-### A text based chat can be used inside the terminal running the chat_app_av.py command
-
-## Note:
-## In any case, the TOR must be always running to connect to the chat app 
-
-
-
-
-
+### Step 5: Chat!
+Once connected:
+* **Video:** A video window will pop up. You can freely resize the video window by dragging the corners! Press `q` while focused on the window to quit.
+* **Audio:** You can speak normally. If the audio is too loud or quiet, type `/vol <number>` (e.g. `/vol 6`) into the chat window to dynamically boost the volume multiplier.
+* **Text:** A text-based chat can be used directly inside the terminal running the script. Type `/quit` to exit.
